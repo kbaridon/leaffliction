@@ -1,0 +1,7 @@
+
+#---- REPO ----
+leaves
+
+#---- Env ----
+.venv
+.env
