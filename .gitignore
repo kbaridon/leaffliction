@@ -5,3 +5,6 @@ leaves
 #---- Env ----
 .venv
 .env
+
+#---- Traces ----
+__pycache__
