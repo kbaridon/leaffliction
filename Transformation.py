@@ -2,7 +2,9 @@ import os
 import sys
 import argparse
 import cv2
+import matplotlib
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 from utils_transformation import (
     get_gaussian_blur,
     get_mask,
@@ -107,9 +109,10 @@ def handle_repo(path_src: str, path_dst: str, transforms: list[str]):
     if not image_paths:
         raise ValueError(f"'{path_src}' is empty")
 
+    matplotlib.use("Agg")
     os.makedirs(path_dst, exist_ok=True)
 
-    for img_path in image_paths:
+    for img_path in tqdm(image_paths, unit="file"):
         fig = get_transformation(img_path, transforms, repo=True)
         base = os.path.splitext(os.path.basename(img_path))[0]
         fig.savefig(os.path.join(path_dst, f"{base}_transformed.jpg"))
