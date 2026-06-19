@@ -1,3 +1,4 @@
-plantcv
+opencv-python
+numpy
 matplotlib
 PyQt6

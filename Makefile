@@ -19,6 +19,6 @@ install:
 	@$(PIP) install -r requirements.txt
 
 fclean:
-	@rm -rf $(VENV)
+	@rm -rf $(VENV) __pycache__
 
 re: fclean all

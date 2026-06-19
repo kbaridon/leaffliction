@@ -1,13 +1,13 @@
 import os
 import sys
 import argparse
+import cv2
 import matplotlib.pyplot as plt
-from plantcv import plantcv as pcv
 from utils_transformation import (
     get_gaussian_blur,
     get_mask,
-    get_roi_objects,
-    get_analyze_objects,
+    get_roi,
+    get_analyze,
     get_pseudolandmarks,
     get_color_histogram
 )
@@ -16,8 +16,8 @@ from utils_transformation import (
 ALL_TRANSFORMS = [
         "gaussian_blur",
         "mask",
-        "roi_objects",
-        "analyze_object",
+        "roi",
+        "analyze",
         "pseudolandmarks",
         "color_histogram"
         ]
@@ -25,8 +25,8 @@ ALL_TRANSFORMS = [
 TRANSFORM_FUNCS = {
         "gaussian_blur": get_gaussian_blur,
         "mask": get_mask,
-        "roi_objects": get_roi_objects,
-        "analyze_object": get_analyze_objects,
+        "roi": get_roi,
+        "analyze": get_analyze,
         "pseudolandmarks": get_pseudolandmarks,
         "color_histogram": get_color_histogram,
         }
@@ -34,8 +34,8 @@ TRANSFORM_FUNCS = {
 TRANSFORM_TITLES = {
         "gaussian_blur": "Gaussian Blur",
         "mask": "Mask",
-        "roi_objects": "ROI Objects",
-        "analyze_object": "Analyze Object",
+        "roi": "Region of Interest",
+        "analyze": "Analyzed Image",
         "pseudolandmarks": "Pseudolandmarks",
         "color_histogram": "Color Histogram",
         }
@@ -45,14 +45,22 @@ GRID_POSITIONS = [(1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2)]
 VALID_IMAGE_EXTS = {".jpg", ".jpeg", ".png"}
 
 
+def _read_image(path_src: str):
+    """Read an image with OpenCV (BGR)."""
+    img = cv2.imread(path_src, cv2.IMREAD_COLOR)
+    if img is None:
+        raise ValueError(f"Cannot read image '{path_src}'")
+    return img
+
+
 def get_transformation(path_src: str, transforms: list[str], repo: bool):
     """Take an image and return the required transformations of it"""
-    img, _, _ = pcv.readimage(path_src, mode="rgb")
+    img = _read_image(path_src)
 
     fig, axes = plt.subplots(3, 3, figsize=(12, 12))
 
     used_positions = {(0, 1)}
-    axes[0, 1].imshow(img)
+    axes[0, 1].imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     axes[0, 1].set_title("Basic Image")
 
     for i, t in enumerate(transforms):
@@ -120,10 +128,10 @@ def main():
                         help="Activate Gaussian blur transformation")
     parser.add_argument("-mask", action="store_true",
                         help="Activate mask transformation")
-    parser.add_argument("-roi_objects", action="store_true",
-                        help="Activate Roi objects transformation")
-    parser.add_argument("-analyze_object", action="store_true",
-                        help="Activate Analyze object transformation")
+    parser.add_argument("-roi", action="store_true",
+                        help="Activate the ROI render")
+    parser.add_argument("-analyze", action="store_true",
+                        help="Activate Analyzed render")
     parser.add_argument("-pseudolandmarks", action="store_true",
                         help="Activate Pseudolandmarks transformation")
     parser.add_argument("-color_histogram", action="store_true",
