@@ -11,7 +11,7 @@ def main():
 
     try:
 
-        if not sys.argv[1]:
+        if len(sys.argv) != 2:
             raise AssertionError(
                 "The program should have a file path argument: ./Distribution.py ./Apple"
             )
