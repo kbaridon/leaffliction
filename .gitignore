@@ -1,3 +1,13 @@
 *.zip
 Apple/
 Grape/
+
+#---- REPO ----
+leaves
+
+#---- Env ----
+.venv
+.env
+
+#---- Traces ----
+__pycache__
