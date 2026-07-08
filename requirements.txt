@@ -1,7 +1,9 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 opencv-python
 numpy
 matplotlib
 PyQt6
 tqdm
-pandas
 pillow
+torch
+torchvision

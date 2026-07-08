@@ -2,8 +2,13 @@
 Apple/
 Grape/
 
+model.pt
+
 #---- REPO ----
 leaves
+images
+augmented_directory
+learnings
 
 #---- Env ----
 .venv
