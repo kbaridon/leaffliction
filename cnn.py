@@ -17,9 +17,6 @@ KERNEL_SIZE = 3
 POOLSIZE = 2
 DROPOUT = 0.3
 
-ROTATION_DEG = 15
-JITTER = 0.1
-
 
 def discover_classes(data_dir: str):
     root = Path(data_dir)
@@ -54,16 +51,6 @@ class ImageDataset(Dataset):
         path, y = self.samples[i]
         img = Image.open(path).convert("RGB")
         return self.transform(img), y
-
-
-def train_transform():
-    return transforms.Compose([
-        transforms.Resize((IMG_SIZE, IMG_SIZE)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(ROTATION_DEG),
-        transforms.ColorJitter(brightness=JITTER, contrast=JITTER),
-        transforms.ToTensor(),
-    ])
 
 
 def val_transform():

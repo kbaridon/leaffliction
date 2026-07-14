@@ -9,6 +9,8 @@ leaves
 images
 augmented_directory
 learnings
+train_originals
+test_images
 
 #---- Env ----
 .venv

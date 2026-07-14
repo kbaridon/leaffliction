@@ -7,34 +7,24 @@ import argparse
 from pathlib import Path
 
 import torch
-from torch.utils.data import DataLoader, Subset
-from torchvision import transforms
-from PIL import Image
-from tqdm import tqdm
+from torch.utils.data import DataLoader
 
 from cnn import (
     CNN,
     ImageDataset,
     discover_classes,
-    train_transform,
     val_transform,
 )
+from augmentation import process_directory
 
 
 AUGMENTED_DIR = "augmented_directory"
+TRAIN_STAGING_DIR = "train_originals"
 MODEL_PATH = "model.pt"
 
 VAL_RATIO = 0.3
 MIN_VAL = 100
 SEED = 42
-
-BALANCE_AUGMENTER = transforms.Compose([
-    transforms.RandomHorizontalFlip(),
-    transforms.RandomVerticalFlip(),
-    transforms.RandomRotation(30),
-    transforms.RandomAffine(0, shear=15),
-    transforms.ColorJitter(brightness=0.15, contrast=0.15),
-])
 
 
 def set_seed(seed: int):
@@ -43,40 +33,57 @@ def set_seed(seed: int):
     torch.cuda.manual_seed_all(seed)
 
 
+def split_class_files(class_files: dict, val_ratio: float, min_val: int,
+                      seed: int):
+    all_items = [(cls, f) for cls, files in class_files.items() for f in files]
+    n = len(all_items)
+    val_size = max(int(val_ratio * n), min_val)
+    val_size = min(val_size, n - 1)
+
+    rng = random.Random(seed)
+    indices = list(range(n))
+    rng.shuffle(indices)
+    val_set = set(indices[:val_size])
+
+    train_files, val_files = {}, {}
+    for i, (cls, f) in enumerate(all_items):
+        target = val_files if i in val_set else train_files
+        target.setdefault(cls, []).append(f)
+    return train_files, val_files
+
+
+def stage_train_originals(train_files: dict, staging_dir: str):
+    staging = Path(staging_dir)
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir(parents=True)
+    for cls, files in train_files.items():
+        cls_dir = staging / cls
+        cls_dir.mkdir()
+        for f in files:
+            shutil.copy(f, cls_dir / f.name)
+    return staging
+
+
 def balance_dataset(src_dir: str, dst_dir: str):
     dst = Path(dst_dir)
     if dst.exists():
         shutil.rmtree(dst)
-    dst.mkdir(parents=True)
-
-    classes = discover_classes(src_dir)
-    target = max(len(f) for f in classes.values())
-
-    for name, files in classes.items():
-        cls_dst = dst / name
-        cls_dst.mkdir(parents=True)
-        for f in files:
-            shutil.copy(f, cls_dst / f.name)
-        missing = target - len(files)
-        for i in tqdm(range(missing), desc=f"augment {name}", leave=False):
-            src_file = random.choice(files)
-            img = Image.open(src_file).convert("RGB")
-            aug = BALANCE_AUGMENTER(img)
-            aug.save(cls_dst / f"{src_file.stem}_aug_{i}{src_file.suffix}")
+    process_directory(src_dir)
 
 
-def split_loaders(data_dir: str, batch_size: int):
+def build_loaders(data_dir: str, batch_size: int):
     class_files = discover_classes(data_dir)
-    train_base = ImageDataset(class_files, train_transform())
-    val_base = ImageDataset(class_files, val_transform())
+    train_files, val_files = split_class_files(
+        class_files, VAL_RATIO, MIN_VAL, SEED
+    )
 
-    n = len(train_base)
-    val_size = max(int(VAL_RATIO * n), MIN_VAL)
-    perm = torch.randperm(n, generator=torch.Generator().manual_seed(SEED))
-    perm = perm.tolist()
+    stage_train_originals(train_files, TRAIN_STAGING_DIR)
+    balance_dataset(TRAIN_STAGING_DIR, AUGMENTED_DIR)
 
-    train_ds = Subset(train_base, perm[:n - val_size])
-    val_ds = Subset(val_base, perm[n - val_size:])
+    train_class_files = discover_classes(AUGMENTED_DIR)
+    train_ds = ImageDataset(train_class_files, val_transform())
+    val_ds = ImageDataset(val_files, val_transform())
 
     loader_gen = torch.Generator().manual_seed(SEED)
     train_loader = DataLoader(train_ds, batch_size=batch_size,
@@ -84,7 +91,7 @@ def split_loaders(data_dir: str, batch_size: int):
                               generator=loader_gen)
     val_loader = DataLoader(val_ds, batch_size=batch_size,
                             shuffle=False, num_workers=2)
-    return train_loader, val_loader, train_base.classes
+    return train_loader, val_loader, train_ds.classes
 
 
 def zip_outputs(zip_path: str, model_path: str, augmented_dir: str):
@@ -101,11 +108,9 @@ def train(data_dir: str, batch_size: int, lr: float, patience: int,
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    print("Balancing dataset...")
-    balance_dataset(data_dir, AUGMENTED_DIR)
-
-    train_loader, val_loader, class_names = split_loaders(
-        AUGMENTED_DIR, batch_size
+    print("Splitting originals and balancing train set...")
+    train_loader, val_loader, class_names = build_loaders(
+        data_dir, batch_size
     )
     print(f"Classes ({len(class_names)}): {class_names}")
 

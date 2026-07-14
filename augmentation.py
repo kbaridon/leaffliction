@@ -4,24 +4,24 @@ import shutil
 from pathlib import Path
 
 
-def read_image(file):
+def read_image(file, tag=""):
 
     arg = Path(file)
     img = cv2.imread(file)
     height, width = img.shape[:2]
 
     flip = cv2.flip(img, 1)
-    new_name = arg.stem + "_Flip" + arg.suffix
+    new_name = arg.stem + tag + "_Flip" + arg.suffix
     new_path = arg.parent / new_name
     cv2.imwrite(new_path, flip)
 
     rotate = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-    new_name = arg.stem + "_Rotation" + arg.suffix
+    new_name = arg.stem + tag + "_Rotation" + arg.suffix
     new_path = arg.parent / new_name
     cv2.imwrite(new_path, rotate)
 
     blur = cv2.blur(img, (10, 10))
-    new_name = arg.stem + "_Blur" + arg.suffix
+    new_name = arg.stem + tag + "_Blur" + arg.suffix
     new_path = arg.parent / new_name
     cv2.imwrite(new_path, blur)
 
@@ -30,17 +30,17 @@ def read_image(file):
     x2 = int(width * (1 - 0.2 / 2))
     y2 = int(height * (1 - 0.2 / 2))
     crop = img[y1:y2, x1:x2]
-    new_name = arg.stem + "_Crop" + arg.suffix
+    new_name = arg.stem + tag + "_Crop" + arg.suffix
     new_path = arg.parent / new_name
     cv2.imwrite(new_path, crop)
 
     brightness = cv2.convertScaleAbs(img, alpha=1.5, beta=50)
-    new_name = arg.stem + "_Brightness" + arg.suffix
+    new_name = arg.stem + tag + "_Brightness" + arg.suffix
     new_path = arg.parent / new_name
     cv2.imwrite(new_path, brightness)
 
     vflip = cv2.flip(img, 0)
-    new_name = arg.stem + "_VFlip" + arg.suffix
+    new_name = arg.stem + tag + "_VFlip" + arg.suffix
     new_path = arg.parent / new_name
     cv2.imwrite(new_path, vflip)
 
@@ -68,7 +68,9 @@ def augment_folder(folder_path, img_needed):
 
     while img_created < img_needed:
         img_path = existing_img[img_idx % len(existing_img)]
-        read_image(str(img_path))
+        pass_idx = img_idx // len(existing_img)
+        tag = f"_p{pass_idx}" if pass_idx > 0 else ""
+        read_image(str(img_path), tag=tag)
         img_created += 6
         img_idx += 1
 
