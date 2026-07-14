@@ -2,8 +2,6 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 from PIL import Image
 
 
@@ -13,7 +11,8 @@ def main():
 
         if len(sys.argv) != 2:
             raise AssertionError(
-                "The program should have a file path argument: ./Distribution.py ./Apple"
+                "The program should have a file path argument:"
+                "./Distribution.py ./Apple"
             )
 
         file_path = sys.argv[1]

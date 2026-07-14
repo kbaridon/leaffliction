@@ -19,6 +19,6 @@ install:
 	@$(PIP) install -r requirements.txt
 
 fclean:
-	@rm -rf $(VENV) __pycache__
+	@rm -rf $(VENV) __pycache__ model.pt augmented_directory *.zip learnings train_originals
 
 re: fclean all

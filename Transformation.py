@@ -123,21 +123,21 @@ def main():
     """Take a picture/repo and give the image-transformed versions of them"""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-src", dest="path_src", type=str, required=True,
+    parser.add_argument("--src", dest="path_src", type=str, required=True,
                         help="Path to the input image or repository")
-    parser.add_argument("-dst", dest="path_dst", type=str,
+    parser.add_argument("--dst", dest="path_dst", type=str,
                         help="Path to the output repository")
-    parser.add_argument("-gaussian_blur", action="store_true",
+    parser.add_argument("--gaussian_blur", action="store_true",
                         help="Activate Gaussian blur transformation")
-    parser.add_argument("-mask", action="store_true",
+    parser.add_argument("--mask", action="store_true",
                         help="Activate mask transformation")
-    parser.add_argument("-roi", action="store_true",
+    parser.add_argument("--roi", action="store_true",
                         help="Activate the ROI render")
-    parser.add_argument("-analyze", action="store_true",
+    parser.add_argument("--analyze", action="store_true",
                         help="Activate Analyzed render")
-    parser.add_argument("-pseudolandmarks", action="store_true",
+    parser.add_argument("--pseudolandmarks", action="store_true",
                         help="Activate Pseudolandmarks transformation")
-    parser.add_argument("-color_histogram", action="store_true",
+    parser.add_argument("--color_histogram", action="store_true",
                         help="Activate Color histogram transformation")
 
     transforms = []
